@@ -33,3 +33,7 @@ When you successfully get a lets-encrypt staging cert, you can comment out the s
 You will need to hard-refresh your browser for it to pick up your new cert (some browsers are bad for this - use incognito mode to verify your cert)
 
 Some routers will need a dns record added for accessing your site from inside your network. 
+
+Coming Next:
+
+- Oauth w/ google login
