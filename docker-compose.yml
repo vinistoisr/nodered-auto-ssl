@@ -1,0 +1,135 @@
+## nodered.yml
+## node red + traefik v2 stack
+## create traefik overlay network first
+## forward port 80 to your swarm master node if using http challenge
+## forward port 443 to your swarm for remote access
+## no port forwards needed if using DNS challenge unless you need remote access
+## node red will be available at https://nodered.yourdomain.tld
+## deploy to a docker swarm, single node or more
+
+## YOU MUST PASS THE FOLLOWING ENV VARS TO THE STACK
+
+# LOGLEVEL
+# EMAIL
+# DOMAIN
+# CFAPITOKEN
+# CFZONETOKEN
+# TIMEZONE
+
+
+version: '3.7'
+
+services:
+
+# TRAEFIK 2.2
+
+services:
+  traefik:
+    image: traefik:v2.2
+    command:
+      - "--log.level=$LOGLEVEL"  
+      - "--global.sendAnonymousUsage=true" 
+      - "--accessLog=true"
+      - "--accessLog.filePath=/var/log/docker/traefik.log"
+      - "--accessLog.bufferingSize=100"
+      - "--metrics.influxdb=false"
+      - "--serversTransport.insecureSkipVerify=false"
+      - "--api.dashboard=true"
+      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
+      - "--providers.docker.swarmMode=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=traefik-public"
+      - "--providers.file.directory=/etc"
+      - "--providers.file.watch=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+
+# CLOUDFLARE DNS CHALLENGE
+      - "--certificatesresolvers.letsencryptresolver.acme.email=$EMAIL"
+      - "--certificatesresolvers.letsencryptresolver.acme.dnschallenge=true"
+      - "--certificatesresolvers.letsencryptresolver.acme.dnschallenge.provider=cloudflare"
+      - "--certificatesresolvers.letsencryptresolver.acme.dnschallenge.delaybeforecheck=90"
+      - "--certificatesresolvers.letsencryptresolver.acme.dnsChallenge.resolvers=1.1.1.1:53,1.0.0.1:53"
+      - "--certificatesresolvers.letsencryptresolver.acme.storage=/letsencrypt/acme.json"
+# USE THE STAGING SERVER UNTIL YOU GET ISSUED A LETSENCRYPT STAGING CERT, THEN COMMENT BELOW LINE AND RUN AGAIN
+      - "--certificatesresolvers.letsencryptresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+
+# FOR CLOUDFLARE DNS CHALLENGE
+    environment:
+      - CF_API_EMAIL=$EMAIL
+      - CF_DNS_API_TOKEN=$CFAPITOKEN
+      - CF_ZONE_API_TOKEN=$CFZONETOKEN
+
+# OPEN THESE PORTS IN YOUR ROUTER AND FORWARD THEM TO THE DOCKER MASTER
+
+    ports:
+      - target: 80
+        published: 80
+        protocol: tcp
+        mode: host
+      - target: 443
+        published: 443
+        protocol: tcp
+        mode: host
+
+    volumes:
+      - traefik-certificates:/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+    networks:
+      - traefik-public
+
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
+#global redirect to https
+      labels:
+        - "traefik.http.routers.http-catchall.rule=hostregexp(`{host:.+}`)"
+        - "traefik.http.routers.http-catchall.entrypoints=web"
+        - "traefik.http.routers.http-catchall.middlewares=redirect-to-https"
+        - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+        
+
+# NODE-RED
+  nodered:
+    image: nodered/node-red:latest-12
+    volumes: 
+      - nodered:/data
+    environment:
+      - TZ=$TIMEZONE
+    networks: 
+      - traefik-public
+      - bridge
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nodered.rule=Host(`nodered.$DOMAIN`)" #insert your domain here
+      - "traefik.http.routers.nodered.entrypoints=websecure"
+      - "traefik.http.routers.nodered.tls=true"
+      - "traefik.http.routers.nodered.tls.certresolver=letsencryptresolver"
+      - "traefik.docker.network=traefik-public"
+      - "traefik.http.services.nodered.loadbalancer.server.port=1880"
+      - "traefik.http.middlewares.nodered.headers.SSLRedirect=true"
+      - "traefik.http.middlewares.nodered.headers.STSSeconds=315360000"
+      - "traefik.http.middlewares.nodered.headers.browserXSSFilter=true"
+      - "traefik.http.middlewares.nodered.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.nodered.headers.forceSTSHeader=true"
+      - "traefik.http.middlewares.nodered.headers.STSIncludeSubdomains=true"
+      - "traefik.http.middlewares.nodered.headers.STSPreload=true"
+      - "traefik.http.middlewares.nodered.headers.frameDeny=true"
+
+volumes:
+  nodered:
+  traefik-certificates:
+	  
+networks:
+  traefik-public:
+    external: true
+  bridge:
+    external: true
