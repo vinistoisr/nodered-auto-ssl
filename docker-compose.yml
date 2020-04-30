@@ -3,6 +3,7 @@
 ## create traefik overlay network first
 ## forward ports 80 and 443 to your swarm master
 ## node red will be available at https://nodered.$DOMAIN
+## traefik dashboard will be available at https://traefik.$DOMAIN
 ## deploy to a docker swarm, single node or more
 ## For the Domain env var, just supply the main domain, not the 'nodered' subdomain. 
 ## so for nodered.mydomain.com 
@@ -12,13 +13,16 @@
 ## enter env vars with no quotes
 
 ## YOU MUST PASS THE FOLLOWING ENV VARS TO THE STACK
+## FILL IN YOUR INFO
+## IPS NOT IN THE WHITELIST RANGES WILL BE DENIED
 
-# LOGLEVEL
-# EMAIL
-# DOMAIN
-# CFAPITOKEN
-# CFZONETOKEN
-# TIMEZONE
+# LOGLEVEL=DEBUG #OR INFO
+# EMAIL=your@email.com
+# DOMAIN=yourdomain.com
+# CFAPITOKEN=ds98afyasd9f8yha9sdhf9asdh
+# CFZONETOKEN=asiodhf98asdhf98sadhf
+# TIMEZONE=America/Toronto
+# IPWHITELIST=192.168.100.0/24,210.45.23.241/16
 
 
 version: '3.7'
@@ -95,6 +99,19 @@ services:
         - "traefik.http.routers.http-catchall.entrypoints=web"
         - "traefik.http.routers.http-catchall.middlewares=redirect-to-https"
         - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+        
+#middleware chain called me-only catches filters ip whitelist
+        - "traefik.http.middlewares.me-only.ipwhitelist.sourcerange=$IPWHITELIST"      
+        
+#traefik dashboard
+        - "traefik.enable=true"
+        - "traefik.http.routers.traefik.rule=Host(`traefik.$DOMAIN`)"
+        - "traefik.http.routers.traefik.service=api@internal"
+        - "traefik.http.routers.traefik.tls.certresolver=letsencryptresolver"
+        - "traefik.http.routers.traefik.entrypoints=websecure"
+        - "traefik.http.services.dummy-svc.loadbalancer.server.port=9999"
+        - "traefik.http.routers.traefik.middlewares=me-only"
+
 
 # NODE-RED
   nodered:
@@ -126,6 +143,7 @@ services:
       - "traefik.http.middlewares.nodered.headers.STSIncludeSubdomains=true"
       - "traefik.http.middlewares.nodered.headers.STSPreload=true"
       - "traefik.http.middlewares.nodered.headers.frameDeny=true"
+      - "traefik.http.routers.traefik.middlewares=me-only"
 
 volumes:
   nodered:
