@@ -1,6 +1,6 @@
 
 ## nodered.yml
-## node red + traefik v2 stack
+## node red + traefik v2 stack + google oauth
 ## create traefik overlay network first
 ## forward ports 80 and 443 to your swarm master
 ## node red will be available at https://nodered.$DOMAIN
@@ -13,9 +13,13 @@
 ## Cloudflare token Permissions shall be  Edit zone DNS	Zone.Zone Settings, Zone.Zone, Zone.DNS	All zones
 ## enter env vars with no quotes
 
+## YOU MUST FOLLOW INSTRUCTIONS UNDER 'PROVIDER SETUP' FOR GOOGLE OAUTH:
+## https://hub.docker.com/r/thomseddon/traefik-forward-auth
+
 ## YOU MUST PASS THE FOLLOWING ENV VARS TO THE STACK
 ## FILL IN YOUR INFO
 ## IPS NOT IN THE WHITELIST RANGES WILL BE DENIED
+
 
 # LOGLEVEL=DEBUG #OR INFO
 # EMAIL=your@email.com
@@ -38,6 +42,9 @@ services:
 services:
   traefik:
     image: traefik:v2.2
+    configs:
+        - source: traefik-auth.toml
+          target: /etc/traefik-auth.toml
     command:
       - "--log.level=$LOGLEVEL"  
       - "--global.sendAnonymousUsage=true" 
@@ -47,6 +54,7 @@ services:
       - "--metrics.influxdb=false"
       - "--serversTransport.insecureSkipVerify=false"
       - "--api.dashboard=true"
+      - "--api.insecure=false" #turn on the api
       - "--providers.docker.endpoint=unix:///var/run/docker.sock"
       - "--providers.docker.swarmMode=true"
       - "--providers.docker.exposedbydefault=false"
