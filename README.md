@@ -1,4 +1,4 @@
-Running this stack will result in a node-red V12 container, accessilble at https://nodered.yourdomain.com, over SSL port 443 with a free certificate provided by Let's Encrypt, automatically managed by Traefik V2.2 web proxy. Traefik will completely manage the cert, including renewals, as well as the proxied ingress from your public facing port 443 to the node-red container on port 1880. 
+Running this stack will result in a node-red container, pulled from nodered/node-red:latest accessilble at https://nodered.yourdomain.com, over SSL port 443 with a free certificate provided by Let's Encrypt, automatically managed by Traefik V2.2 web proxy. Traefik will completely manage the cert, including renewals, as well as the proxied ingress from your public facing port 443 to the node-red container on port 1880. 
 
 A traefik Dashboard will be presented at https://traefik.yourdomain.com, using traefik itself as its proxy as described above. 
 
