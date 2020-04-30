@@ -22,7 +22,13 @@ Edit zone DNS	Zone.Zone Settings, Zone.Zone, Zone.DNS	All zones
 
 5. You have created a docker overlay network named 'traefik-public'
 
-Supply the required env vars to the stack.  When you successfully get a lets-encrypt staging cert, you can comment out the staging line in its entirety, delete the stack, and deploy the stack again. 
+6. Supply the required env vars to the stack and deploy:
+
+```
+docker stack deploy -c docker-compose.yml nodered
+```
+
+When you successfully get a lets-encrypt staging cert, you can comment out the staging line in its entirety, delete the stack, and deploy the stack again. 
 
 You will need to hard-refresh your browser for it to pick up your new cert (some browsers are bad for this - use incognito mode to verify your cert)
 
