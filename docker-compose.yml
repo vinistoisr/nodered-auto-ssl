@@ -1,11 +1,15 @@
 ## nodered.yml
 ## node red + traefik v2 stack
 ## create traefik overlay network first
-## forward port 80 to your swarm master node if using http challenge
-## forward port 443 to your swarm for remote access
-## no port forwards needed if using DNS challenge unless you need remote access
-## node red will be available at https://nodered.yourdomain.tld
+## forward ports 80 and 443 to your swarm master
+## node red will be available at https://nodered.$DOMAIN
 ## deploy to a docker swarm, single node or more
+## For the Domain env var, just supply the main domain, not the 'nodered' subdomain. 
+## so for nodered.mydomain.com 
+## enter mydomain.com for the env var #DOMAIN
+## Cloudflare API token and Zone token can be the same token
+## Cloudflare token Permissions shall be  Edit zone DNS	Zone.Zone Settings, Zone.Zone, Zone.DNS	All zones
+## enter env vars with no quotes
 
 ## YOU MUST PASS THE FOLLOWING ENV VARS TO THE STACK
 
