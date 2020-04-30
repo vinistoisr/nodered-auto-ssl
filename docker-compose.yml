@@ -91,7 +91,6 @@ services:
         - "traefik.http.routers.http-catchall.entrypoints=web"
         - "traefik.http.routers.http-catchall.middlewares=redirect-to-https"
         - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-        
 
 # NODE-RED
   nodered:
@@ -127,7 +126,7 @@ services:
 volumes:
   nodered:
   traefik-certificates:
-	  
+
 networks:
   traefik-public:
     external: true
