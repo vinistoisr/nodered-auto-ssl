@@ -198,7 +198,7 @@ services:
       - "traefik.http.middlewares.nodered.headers.STSIncludeSubdomains=true"
       - "traefik.http.middlewares.nodered.headers.STSPreload=true"
       - "traefik.http.middlewares.nodered.headers.frameDeny=true"
-      - "traefik.http.routers.traefik.middlewares=admin"
+      - "traefik.http.routers.nodered.middlewares=admin"
 
 volumes:
   nodered:
