@@ -35,7 +35,12 @@
 
 version: '3.7'
 
-services:
+
+configs:
+#  traefik-rules.toml:
+#    external: true
+  traefik-auth.toml:
+    external: true
 
 # TRAEFIK 2.2
 
@@ -137,7 +142,7 @@ services:
       - CLIENT_ID=$GOOGLE_CLIENT_ID
       - CLIENT_SECRET=$GOOGLE_CLIENT_SECRET
       - SECRET=$OAUTH_SECRET
-      - COOKIE_DOMAIN=$DOMAINN
+      - COOKIE_DOMAIN=$DOMAIN
       - INSECURE_COOKIE=false
       - AUTH_HOST=auth.$DOMAIN
       - URL_PATH=/_oauth
